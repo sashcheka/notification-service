@@ -7,39 +7,28 @@ services:
       dockerfile: src/Dockerfile
     command: sh -c "python src/main.py"
     volumes:
-      - .:/src
+      - .:/app
 #    depends_on:
-#      - rabbitmq
 #      - mongodb
     env_file:
       - .env
 
-networks:
-  default:
-    external:
-      name: common_network
-
-#  rabbitmq:
-#    image: rabbitmq:3-management-alpine
-#    ports:
-#      - "5672:5672"
-#      - "15672:15672"
-#    volumes:
-#      - rabbitmq_data:/var/lib/rabbitmq
-#    healthcheck:
-#      test: [ "CMD", "rabbitmqctl", "status" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 15s
-#
 #  mongodb:
 #    image: mongo
 #    ports:
 #      - "27017:27017"
+#    volumes:
+#      - mongodb_data:/var/lib/mongodb
 #    environment:
 #      MONGO_INITDB_ROOT_USERNAME: mongo
 #      MONGO_INITDB_ROOT_PASSWORD: mongo
-#
+
+
+
+networks:
+  default:
+    name: common_network
+    external: true
+
 #volumes:
-#  rabbitmq_data:
+#  mongodb_data:

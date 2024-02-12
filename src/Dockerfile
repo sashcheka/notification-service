@@ -5,6 +5,6 @@ WORKDIR /app
 COPY Pipfile Pipfile.lock /app/
 RUN pip install pipenv && pipenv install --system --deploy
 
-COPY . /app/
+COPY . /app
 
-CMD ["python", "-m", "main"]
+CMD ["python", "main.py"]

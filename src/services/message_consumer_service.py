@@ -1,18 +1,20 @@
-from adapters.rabbitmq_adapter import RabbitMQAdapter
-from core.config import settings
-import time
+from adapters.rabbitmq_adapter import setup_rabbitmq_consumer
+from adapters.mongodb_adapter import MongoDBAdapter
 
 
-def handle_message(ch, method, properties, body):
-    print(f"Received {body}")
+def callback(ch, method, properties, body):
+    message = body.decode()
+    print(f"Received: {message}")
+
+    import json
+
+    message_dict = json.loads(message)
+
+    mongo_adapter.insert_message(message_dict)
 
 
-def start_message_consumer():
-    while True:
-        try:
-            rabbitmq_adapter = RabbitMQAdapter(settings.rabbitmq.url)
-            rabbitmq_adapter.consume_messages("reset-password-queue", handle_message)
-        except Exception as e:
-            print(f"Error in message consumer: {e}")
-            print("Attempting to restart message consumer in 5 seconds...")
-            time.sleep(5)
+mongo_adapter = MongoDBAdapter("mongodb://mongo:mongo@localhost:27017/")
+
+
+def start_service():
+    setup_rabbitmq_consumer("your_queue_name", callback)

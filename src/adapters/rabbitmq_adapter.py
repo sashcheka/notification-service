@@ -1,12 +1,26 @@
 import pika
+from typing import Callable
+
+from ports.message_queue_port import MessageQueuePort
 
 
-def setup_rabbitmq_consumer(queue_name, callback):
-    connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
-    channel = connection.channel()
+class RabbitMQAdapter(MessageQueuePort):
+    def __init__(self, url: str):
+        self.params = pika.URLParameters(url)
+        self.connection = None
+        self.channel = None
 
-    channel.queue_declare(queue=queue_name)
+    def initialize_queue(self, queue_name: str):
+        if not self.connection or not self.channel:
+            self.connection = pika.BlockingConnection(self.params)
+            self.channel = self.connection.channel()
+        self.channel.queue_declare(queue=queue_name)
 
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-
-    channel.start_consuming()
+    def consume_messages(self, queue_name: str, callback: Callable):
+        self.channel.basic_consume(
+            queue=queue_name,
+            on_message_callback=callback,
+            auto_ack=True,
+        )
+        print(" [*] Waiting for messages. To exit press CTRL+C")
+        self.channel.start_consuming()

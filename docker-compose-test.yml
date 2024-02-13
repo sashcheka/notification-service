@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  notification-service:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    command: sh -c "python src/main.py"
+    volumes:
+      - .:/app
+#    depends_on:
+#      - mongodb
+    env_file:
+      - .env
+
+#  mongodb:
+#    image: mongo
+#    ports:
+#      - "27017:27017"
+#    volumes:
+#      - mongodb_data:/var/lib/mongodb
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: mongo
+#      MONGO_INITDB_ROOT_PASSWORD: mongo
+
+
+
+networks:
+  default:
+    name: common_network
+    external: true
+
+#volumes:
+#  mongodb_data:

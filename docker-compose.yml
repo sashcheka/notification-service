@@ -2,12 +2,11 @@ version: '3.8'
 
 services:
   notification-service:
-    build:
-      context: .
-      dockerfile: src/Dockerfile
-    command: python src/main.py
     networks:
       - common_network
+    build:
+      context: .
+      dockerfile: Dockerfile
 
 networks:
   common_network:

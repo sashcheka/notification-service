@@ -1,5 +1,6 @@
-import pika
 from typing import Callable
+
+import pika
 
 from ports.message_queue_port import MessageQueuePort
 

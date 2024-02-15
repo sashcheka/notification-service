@@ -2,10 +2,10 @@ from typing import Callable
 
 import pika
 
-from ports.message_queue_port import MessageQueuePort
+from ports.message_queue_interface import IMessageQueue
 
 
-class RabbitMQAdapter(MessageQueuePort):
+class RabbitMQAdapter(IMessageQueue):
     def __init__(self, url: str):
         self.params = pika.URLParameters(url)
         self.connection = None

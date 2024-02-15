@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class MessageQueuePort(ABC):
+class IMessageQueue(ABC):
     @abstractmethod
     def initialize_queue(self, queue_name: str):
         pass

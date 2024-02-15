@@ -7,7 +7,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      - mongodb
+    env_file:
+      - .env
+
+  mongodb:
+    image: mongo:latest
+    networks:
+      - common_network
+    volumes:
+      - mongodb_data:/var/lib/mongodb
+    ports:
+      - "27017:27017"
+    env_file:
+      - .env
+
+
 
 networks:
   common_network:
     external: true
+
+volumes:
+  mongodb_data:

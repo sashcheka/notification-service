@@ -9,6 +9,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mongodb
+      - localstack
     env_file:
       - .env
 
@@ -23,9 +24,27 @@ services:
     env_file:
       - .env
 
+  localstack:
+    image: localstack/localstack
+    networks:
+      - common_network
+    ports:
+      - "4566:4566"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=1
+      - SERVICES=ses
+      - DEFAULT_REGION=${LOCALSTACK_REGION_NAME}
+      - AWS_ACCESS_KEY_ID=${LOCALSTACK_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${LOCALSTACK_AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - localstack_data:/var/lib/localstack
+
 networks:
   common_network:
     external: true
 
 volumes:
   mongodb_data:
+  localstack_data:

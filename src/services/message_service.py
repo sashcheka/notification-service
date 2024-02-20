@@ -6,10 +6,11 @@ from models.reset_password_message_schema import ResetPasswordMessageSchema
 
 
 class MessageService:
-    def __init__(self, mq_adapter, db_adapter, ses_adapter):
+    def __init__(self, mq_adapter, db_adapter, ses_adapter, token_validator_adapter):
         self.mq_adapter = mq_adapter
         self.db_adapter = db_adapter
         self.ses_adapter = ses_adapter
+        self.token_validator_adapter = token_validator_adapter
 
     def save_message_in_db(self, body):
         message_data = body.decode() if isinstance(body, bytes) else body
@@ -43,13 +44,23 @@ class MessageService:
         )
 
     def validate_message_password_restoration_link(self, message):
-        pass
+        reset_password_link = message.get("body", "")
+
+        try:
+            payload = self.token_validator_adapter.validate_reset_password_link_token(
+                reset_password_link
+            )
+            print("Link validated successfully.")
+            return payload
+        except ValueError as e:
+            print(f"Link validation failed. Error message: {e}")
+            return None
 
     def validate_message(self, message_data):
         try:
             reset_password_message = ResetPasswordMessageSchema(**message_data)
             print("Message validated successfully.")
-            return reset_password_message
+            return reset_password_message.dict()
         except ValidationError:
             print("Message validation failed.")
 
@@ -59,8 +70,14 @@ class MessageService:
             message_data = self.parse_message_body(body)
             reset_password_message = self.validate_message(message_data)
 
+            if not self.validate_message_password_restoration_link(
+                reset_password_message
+            ):
+                print("Password reset link is invalid or has expired.")
+                return
+
             self.save_message_in_db(body)
-            self.prepare_and_send_email(reset_password_message.dict())
+            self.prepare_and_send_email(reset_password_message)
         except ValidationError:
             print("The message received is not valid and will not be processed.")
 

@@ -1,6 +1,9 @@
 import os
+from pathlib import Path
 
 from pydantic_settings import BaseSettings
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 class RabbitMQSettings(BaseSettings):
@@ -37,10 +40,16 @@ class AWSSESSettings(BaseSettings):
         return f"http://{self.HOST}:{self.PORT}"
 
 
+class JWTSettings(BaseSettings):
+    PUBLIC_KEY_PATH: Path = BASE_DIR / "certs/public_key.pem"
+    ALGORITHM: str = os.environ["JWT_ALGORITHM"]
+
+
 class Settings(BaseSettings):
     rabbitmq: RabbitMQSettings = RabbitMQSettings()
     mongodb: MongoDBSettings = MongoDBSettings()
     awsses: AWSSESSettings = AWSSESSettings()
+    jwt: JWTSettings = JWTSettings()
 
 
 settings = Settings()

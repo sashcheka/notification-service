@@ -2,6 +2,7 @@ import os
 import sys
 
 from adapters.aws_ses_adapter import AWSSESAdapter
+from adapters.jwt_token_validator_adapter import JWTTokenValidatorAdapter
 from adapters.mongodb_adapter import MongoDBAdapter
 from adapters.rabbitmq_adapter import RabbitMQAdapter
 from core.config import settings
@@ -32,10 +33,13 @@ def main():
         endpoint_url=endpoint_url,
     )
 
+    token_validator_adapter = JWTTokenValidatorAdapter()
+
     message_service = MessageService(
         mq_adapter=rabbitmq_adapter,
         db_adapter=mongodb_adapter,
         ses_adapter=ses_adapter,
+        token_validator_adapter=token_validator_adapter,
     )
     message_service.start_listening(queue_name="reset-password-queue")
 

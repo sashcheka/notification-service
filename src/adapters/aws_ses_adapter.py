@@ -21,47 +21,18 @@ class AWSSESAdapter(IAWSSES):
         try:
             response = self.ses_client.verify_email_identity(EmailAddress=email_address)
             print(f"Email address verified: {email_address}")
-        except ClientError as e:
-            print(f"Failed to verify email address {email_address}: {e}")
+        except ClientError:
+            print(f"Failed to verify email address {email_address}.")
+            raise
 
     def create_html_email_body(self, email_body):
-        html_content = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Password Reset</title>
-        <style>
-            body {{
-                font-family: 'Arial', sans-serif;
-                margin: 0;
-                padding: 20px;
-                background-color: #f4f4f4;
-                color: #333;
-            }}
-            .container {{
-                background-color: #fff;
-                padding: 20px;
-                border-radius: 5px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }}
-            h2 {{
-                color: #444;
-            }}
-            a, a:visited {{
-                color: #1a0dab;
-            }}
-        </style>
-        </head>
-        <body>
-        <div class="container">
-            <h2>Password Reset Request</h2>
-            <p>{email_body}</p>
-        </div>
-        </body>
-        </html>
-        """
+        template_path = "src/core/templates/password_reset_template.html"
+
+        with open(template_path, "r", encoding="utf-8") as file:
+            html_content = file.read()
+
+        html_content = html_content.replace("{email_body}", email_body)
+
         return html_content
 
     def send_email(self, source, destination, subject, text, html, reply_tos=None):
@@ -86,8 +57,8 @@ class AWSSESAdapter(IAWSSES):
             response = self.ses_client.send_email(**send_args)
             message_id = response["MessageId"]
             print(f"Sent email {message_id} from {source} to {destination}")
-        except ClientError as e:
-            print(e.response["Error"]["Message"])
+        except ClientError:
+            print(f"Failed to send an email on address: {destination}.")
             raise
         else:
             return message_id

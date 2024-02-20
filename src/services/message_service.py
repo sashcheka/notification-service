@@ -1,5 +1,9 @@
 import json
 
+from pydantic import ValidationError
+
+from models.reset_password_message_schema import ResetPasswordMessageSchema
+
 
 class MessageService:
     def __init__(self, mq_adapter, db_adapter, ses_adapter):
@@ -38,12 +42,27 @@ class MessageService:
             html=email_body_html,
         )
 
+    def validate_message_password_restoration_link(self, message):
+        pass
+
+    def validate_message(self, message_data):
+        try:
+            reset_password_message = ResetPasswordMessageSchema(**message_data)
+            print("Message validated successfully.")
+            return reset_password_message
+        except ValidationError:
+            print("Message validation failed.")
+
     def message_received_callback(self, ch, method, properties, body):
         print(f" [x] Received {body}")
-        self.save_message_in_db(body)
+        try:
+            message_data = self.parse_message_body(body)
+            reset_password_message = self.validate_message(message_data)
 
-        message_data = self.parse_message_body(body)
-        self.prepare_and_send_email(message_data)
+            self.save_message_in_db(body)
+            self.prepare_and_send_email(reset_password_message.dict())
+        except ValidationError:
+            print("The message received is not valid and will not be processed.")
 
     def start_listening(self, queue_name):
         self.mq_adapter.initialize_queue(queue_name)

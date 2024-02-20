@@ -8,6 +8,7 @@ pydantic-settings = "*"
 pika = "*"
 pymongo = "*"
 boto3 = "*"
+pydantic = {extras = ["email"], version = "*"}
 
 [dev-packages]
 black = "*"

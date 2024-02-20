@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  notification-service-test:
+  web-test:
     networks:
       - common_network
     build:

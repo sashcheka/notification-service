@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  notification-service:
+  web:
     networks:
       - common_network
     build:
@@ -14,7 +14,7 @@ services:
       - .env
 
   mongodb:
-    image: mongo:latest
+    image: mongo:7.0.5
     networks:
       - common_network
     volumes:
@@ -25,7 +25,7 @@ services:
       - .env
 
   localstack:
-    image: localstack/localstack
+    image: localstack/localstack:3.1
     networks:
       - common_network
     ports:

@@ -9,6 +9,7 @@ pika = "*"
 pymongo = "*"
 boto3 = "*"
 pydantic = {extras = ["email"], version = "*"}
+pyjwt = {extras = ["crypto"], version = "*"}
 
 [dev-packages]
 black = "*"

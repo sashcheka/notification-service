@@ -1,5 +1,6 @@
 import json
 
+from pika.spec import BasicProperties
 from pydantic import ValidationError
 
 from models.reset_password_message_schema import ResetPasswordMessageSchema
@@ -74,12 +75,36 @@ class MessageService:
                 reset_password_message
             ):
                 print("Password reset link is invalid or has expired.")
-                return
+                raise ValueError("Invalid or expired password reset link.")
 
             self.save_message_in_db(body)
             self.prepare_and_send_email(reset_password_message)
-        except ValidationError:
-            print("The message received is not valid and will not be processed.")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+        except ValueError as e:
+            print(f"Processing failed: {e}")
+            self.handle_failure(ch, method, properties, body)
+
+    def handle_failure(self, ch, method, properties, body):
+        failure_count = properties.headers["x-retry-count"] + 1
+        print(
+            f"Handling failure, current retry count is: {failure_count - 1}, incrementing to: {failure_count}"
+        )
+
+        if failure_count < 5:
+            headers = properties.headers or {}
+            headers["x-retry-count"] = failure_count
+            print(f"Republishing with new retry count: {failure_count}")
+            ch.basic_publish(
+                exchange=method.exchange,
+                routing_key=method.routing_key,
+                body=body,
+                properties=BasicProperties(headers=headers),
+            )
+        else:
+            print("Sending message to DLQ")
+            dlq_name = "reset-password-queue-dlq"
+            self.mq_adapter.publish_to_dlq(dlq_name, body)
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def start_listening(self, queue_name):
         self.mq_adapter.initialize_queue(queue_name)

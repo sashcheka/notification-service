@@ -60,5 +60,8 @@ class AWSSESAdapter(IAWSSES):
         except ClientError:
             print(f"Failed to send an email on address: {destination}.")
             raise
+        except Exception as e:
+            print(f"Exception occurred: {e}")
+            raise
         else:
             return message_id

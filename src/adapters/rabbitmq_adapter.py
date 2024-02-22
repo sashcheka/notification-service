@@ -50,7 +50,3 @@ class RabbitMQAdapter(IMessageQueue):
         )
         print(" [*] Waiting for messages. To exit press CTRL+C")
         self.channel.start_consuming()
-
-    def publish_to_dlq(self, dlq_name: str, body):
-        self.ensure_channel()
-        self.channel.basic_publish(exchange="", routing_key=dlq_name, body=body)

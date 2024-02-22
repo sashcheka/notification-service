@@ -18,7 +18,3 @@ class IMessageQueue(ABC):
     @abstractmethod
     def consume_messages(self, queue_name: str, callback: Callable):
         pass
-
-    @abstractmethod
-    def publish_to_dlq(self, dlq_name: str, body):
-        pass

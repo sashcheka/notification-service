@@ -102,9 +102,7 @@ class MessageService:
             )
         else:
             print("Sending message to DLQ")
-            dlq_name = "reset-password-queue-dlq"
-            self.mq_adapter.publish_to_dlq(dlq_name, body)
-            ch.basic_ack(delivery_tag=method.delivery_tag)
+            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
     def start_listening(self, queue_name):
         self.mq_adapter.initialize_queue(queue_name)

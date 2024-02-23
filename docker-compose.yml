@@ -14,11 +14,11 @@ services:
       - .env
 
   mongodb:
-    image: mongo:7.0.5
+    image: bitnami/mongodb:7.0.5
     networks:
       - common_network
     volumes:
-      - mongodb_data:/var/lib/mongodb
+      - mongodb_data:/bitnami/mongodb
     ports:
       - "27017:27017"
     env_file:

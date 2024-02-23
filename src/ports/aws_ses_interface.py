@@ -9,3 +9,7 @@ class IAWSSES(ABC):
     @abstractmethod
     def send_email(self, source, destination, subject, text, html, reply_tos=None):
         pass
+
+    @abstractmethod
+    def prepare_and_send_email(self, message_data):
+        pass

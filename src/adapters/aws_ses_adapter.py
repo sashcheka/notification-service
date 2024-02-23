@@ -65,3 +65,25 @@ class AWSSESAdapter(IAWSSES):
             raise
         else:
             return message_id
+
+    def prepare_and_send_email(self, message_data):
+        try:
+            if not all(key in message_data for key in ["email", "subject", "body"]):
+                return
+
+            source_email = "your-source-email@example.com"
+            destination_email = message_data["email"]
+            email_subject = message_data["subject"]
+            email_body_text = message_data["body"]
+            email_body_html = self.create_html_email_body(email_body_text)
+
+            self.send_email(
+                source=source_email,
+                destination=destination_email,
+                subject=email_subject,
+                text=email_body_text,
+                html=email_body_html,
+            )
+        except Exception as e:
+            print(f"Exception occurred: {e}")
+            raise

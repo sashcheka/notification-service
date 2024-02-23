@@ -2,39 +2,43 @@ version: '3.8'
 
 services:
   web-test:
-    networks:
-      - common_network
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - mongodb
-      - localstack
+      - mongodb-test
+      - localstack-test
+      - rabbitmq-test
     env_file:
-      - .env
+      - test.env
     volumes:
       - ./src:/app/src
 
-  mongodb:
+  mongodb-test:
     image: bitnami/mongodb:7.0.5
-    networks:
-      - common_network
+    ports:
+      - "27018:27017"
     volumes:
-      - mongodb_data:/bitnami/mongodb
-    ports:
-      - "27017:27017"
+      - mongodb_data_test:/bitnami/mongodb
     env_file:
-      - .env
+      - test.env
 
+  rabbitmq-test:
+    image: rabbitmq:3.12.13-management-alpine
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq_data_test:/var/lib/rabbitmq
+    env_file:
+      - test.env
 
-  localstack:
+  localstack-test:
     image: localstack/localstack:3.1
-    networks:
-      - common_network
     ports:
-      - "4566:4566"
+      - "4567:4566"
     env_file:
-      - .env
+      - test.env
     environment:
       - DEBUG=1
       - SERVICES=ses
@@ -42,12 +46,9 @@ services:
       - AWS_ACCESS_KEY_ID=${LOCALSTACK_AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${LOCALSTACK_AWS_SECRET_ACCESS_KEY}
     volumes:
-      - localstack_data:/var/lib/localstack
-
-networks:
-  common_network:
-    external: true
+      - localstack_data_test:/var/lib/localstack
 
 volumes:
-  mongodb_data:
-  localstack_data:
+  mongodb_data_test:
+  localstack_data_test:
+  rabbitmq_data_test:

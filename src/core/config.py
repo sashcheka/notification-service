@@ -22,10 +22,11 @@ class MongoDBSettings(BaseSettings):
     PASSWORD: str = os.environ["MONGO_INITDB_ROOT_PASSWORD"]
     HOST: str = os.environ["MONGO_INITDB_ROOT_HOST"]
     PORT: str = os.environ["MONGO_INITDB_ROOT_PORT"]
+    REPLICA_SET: str = os.environ["MONGODB_REPLICA_SET_NAME"]
 
     @property
     def url(self) -> str:
-        return f"mongodb://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/"
+        return f"mongodb://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/?replicaSet={self.REPLICA_SET}"
 
 
 class AWSSESSettings(BaseSettings):

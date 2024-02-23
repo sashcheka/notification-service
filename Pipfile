@@ -10,6 +10,8 @@ pymongo = "*"
 boto3 = "*"
 pydantic = {extras = ["email"], version = "*"}
 pyjwt = {extras = ["crypto"], version = "*"}
+pytest = "*"
+pytest-cov = "*"
 
 [dev-packages]
 black = "*"

@@ -18,15 +18,6 @@ class MessageService:
         message_data = body.decode() if isinstance(body, bytes) else body
         self.db_adapter.save_message({"message": message_data}, session=session)
 
-    def send_email(self, source, destination, subject, text, html, reply_tos=None):
-        try:
-            self.ses_adapter.send_email(
-                source, destination, subject, text, html, reply_tos
-            )
-        except Exception as e:
-            print(f"Exception occurred: {e}")
-            raise
-
     def parse_message_body(self, body):
         try:
             return json.loads(body) if isinstance(body, bytes) else body
@@ -44,7 +35,7 @@ class MessageService:
             email_body_text = message_data["body"]
             email_body_html = self.ses_adapter.create_html_email_body(email_body_text)
 
-            self.send_email(
+            self.ses_adapter.send_email(
                 source=source_email,
                 destination=destination_email,
                 subject=email_subject,
@@ -90,7 +81,8 @@ class MessageService:
                     print("Password reset link is invalid or has expired.")
                     raise ValueError("Invalid or expired password reset link.")
 
-                self.save_message_in_db(body)
+                self.save_message_in_db(body=body)
+                # self.save_message_in_db(body=body, session=session)
 
                 self.prepare_and_send_email(reset_password_message)
                 ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -104,6 +96,8 @@ class MessageService:
                 self.handle_failure(ch, method, properties, body)
             except Exception as e:
                 print(f"Exception occurred: {e}")
+                session.abort_transaction()
+                self.handle_failure(ch, method, properties, body)
 
     def handle_failure(self, ch, method, properties, body):
         failure_count = properties.headers["x-retry-count"] + 1

@@ -87,6 +87,10 @@ class MessageService:
             print("Sending message to DLQ")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
-    def start_listening(self, queue_name):
-        self.mq_adapter.initialize_queue(queue_name)
+    def start_listening(self, queue_name: str, exchange_name: str, routing_key: str):
+        self.mq_adapter.initialize_queues(
+            queue_name=queue_name,
+            exchange_name=exchange_name,
+            routing_key=routing_key,
+        )
         self.mq_adapter.consume_messages(queue_name, self.message_received_callback)

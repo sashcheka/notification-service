@@ -41,7 +41,11 @@ def main():
         ses_adapter=ses_adapter,
         token_validator_adapter=token_validator_adapter,
     )
-    message_service.start_listening(queue_name="reset-password-queue")
+    message_service.start_listening(
+        queue_name="reset-password-queue",
+        exchange_name="reset-password-exchange",
+        routing_key="reset-password-routing_key",
+    )
 
 
 if __name__ == "__main__":

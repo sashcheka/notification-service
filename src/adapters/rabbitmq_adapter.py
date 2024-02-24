@@ -1,6 +1,7 @@
 from typing import Callable
 
 import pika
+from pika import exceptions
 
 from ports.message_queue_interface import IMessageQueue
 
@@ -17,7 +18,37 @@ class RabbitMQAdapter(IMessageQueue):
         if not self.channel or self.channel.is_closed:
             self.channel = self.connection.channel()
 
-    def initialize_queue(self, queue_name: str):
+    def create_exchange_if_not_exists(self, exchange_name: str) -> bool:
+        self.ensure_channel()
+        try:
+            self.channel.exchange_declare(
+                exchange=exchange_name,
+                exchange_type="direct",
+            )
+            return True
+        except pika.exceptions.ChannelClosedByBroker:
+            self.ensure_channel()
+            return False
+
+    def create_queue_bind_if_not_exists(
+        self,
+        queue_name: str,
+        exchange_name: str,
+        routing_key: str,
+    ) -> bool:
+        self.ensure_channel()
+        try:
+            self.channel.queue_bind(
+                queue=queue_name,
+                exchange=exchange_name,
+                routing_key=routing_key,
+            )
+            return True
+        except pika.exceptions.ChannelClosedByBroker:
+            self.ensure_channel()
+            return False
+
+    def initialize_queues(self, queue_name: str, exchange_name: str, routing_key: str):
         dlq_name = "reset-password-queue-dlq"
         dlx_name = "reset-password-queue-dlx"
 
@@ -30,10 +61,16 @@ class RabbitMQAdapter(IMessageQueue):
             "x-message-ttl": 60000,
             "x-max-length": 10000,
         }
+
         self.channel.queue_declare(queue=queue_name, arguments=arguments, durable=True)
+        self.create_exchange_if_not_exists(exchange_name=exchange_name)
+        self.create_queue_bind_if_not_exists(
+            queue_name=queue_name,
+            exchange_name=exchange_name,
+            routing_key=routing_key,
+        )
 
     def setup_dlq(self, dlq_name: str, dlx_name: str):
-        self.ensure_channel()
         self.channel.exchange_declare(
             exchange=dlx_name,
             exchange_type="direct",

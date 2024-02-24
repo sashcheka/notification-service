@@ -8,7 +8,7 @@ class IMessageQueue(ABC):
         pass
 
     @abstractmethod
-    def initialize_queue(self, queue_name: str):
+    def initialize_queues(self, queue_name: str, exchange_name: str, routing_key: str):
         pass
 
     @abstractmethod

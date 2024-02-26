@@ -8,21 +8,23 @@ class AWSSESAdapter(IAWSSES):
     def __init__(
         self, aws_access_key_id, aws_secret_access_key, region_name, endpoint_url
     ):
-        self.ses_client = boto3.client(
+        self._ses_client = boto3.client(
             "ses",
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             region_name=region_name,
             endpoint_url=endpoint_url,
         )
-        self.verify_email_address("your-source-email@example.com")
+        self._email_address = "your-source-email@example.com"
 
-    def verify_email_address(self, email_address):
+    def verify_email_address(self):
         try:
-            response = self.ses_client.verify_email_identity(EmailAddress=email_address)
-            print(f"Email address verified: {email_address}")
+            response = self._ses_client.verify_email_identity(
+                EmailAddress=self._email_address
+            )
+            print(f"Email address verified: {self._email_address}")
         except ClientError:
-            print(f"Failed to verify email address {email_address}.")
+            print(f"Failed to verify email address {self._email_address}.")
             raise
 
     def create_html_email_body(self, email_body):
@@ -54,7 +56,7 @@ class AWSSESAdapter(IAWSSES):
             )
 
         try:
-            response = self.ses_client.send_email(**send_args)
+            response = self._ses_client.send_email(**send_args)
             message_id = response["MessageId"]
             print(f"Sent email {message_id} from {source} to {destination}")
         except ClientError:
@@ -71,7 +73,7 @@ class AWSSESAdapter(IAWSSES):
             if not all(key in message_data for key in ["email", "subject", "body"]):
                 return
 
-            source_email = "your-source-email@example.com"
+            source_email = self._email_address
             destination_email = message_data["email"]
             email_subject = message_data["subject"]
             email_body_text = message_data["body"]

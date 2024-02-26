@@ -32,6 +32,7 @@ def main():
         region_name=region_name,
         endpoint_url=endpoint_url,
     )
+    ses_adapter.verify_email_address()
 
     token_validator_adapter = JWTTokenValidatorAdapter()
 

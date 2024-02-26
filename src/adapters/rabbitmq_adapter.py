@@ -8,20 +8,20 @@ from ports.message_queue_interface import IMessageQueue
 
 class RabbitMQAdapter(IMessageQueue):
     def __init__(self, url: str):
-        self.params = pika.URLParameters(url)
-        self.connection = None
-        self.channel = None
+        self._params = pika.URLParameters(url)
+        self._connection = None
+        self._channel = None
 
     def ensure_channel(self):
-        if not self.connection or self.connection.is_closed:
-            self.connection = pika.BlockingConnection(self.params)
-        if not self.channel or self.channel.is_closed:
-            self.channel = self.connection.channel()
+        if not self._connection or self._connection.is_closed:
+            self._connection = pika.BlockingConnection(self._params)
+        if not self._channel or self._channel.is_closed:
+            self._channel = self._connection.channel()
 
     def create_exchange_if_not_exists(self, exchange_name: str) -> bool:
         self.ensure_channel()
         try:
-            self.channel.exchange_declare(
+            self._channel.exchange_declare(
                 exchange=exchange_name,
                 exchange_type="direct",
             )
@@ -38,7 +38,7 @@ class RabbitMQAdapter(IMessageQueue):
     ) -> bool:
         self.ensure_channel()
         try:
-            self.channel.queue_bind(
+            self._channel.queue_bind(
                 queue=queue_name,
                 exchange=exchange_name,
                 routing_key=routing_key,
@@ -62,7 +62,7 @@ class RabbitMQAdapter(IMessageQueue):
             "x-max-length": 10000,
         }
 
-        self.channel.queue_declare(queue=queue_name, arguments=arguments, durable=True)
+        self._channel.queue_declare(queue=queue_name, arguments=arguments, durable=True)
         self.create_exchange_if_not_exists(exchange_name=exchange_name)
         self.create_queue_bind_if_not_exists(
             queue_name=queue_name,
@@ -71,19 +71,21 @@ class RabbitMQAdapter(IMessageQueue):
         )
 
     def setup_dlq(self, dlq_name: str, dlx_name: str):
-        self.channel.exchange_declare(
+        self._channel.exchange_declare(
             exchange=dlx_name,
             exchange_type="direct",
             durable=True,
         )
-        self.channel.queue_declare(queue=dlq_name, durable=True)
-        self.channel.queue_bind(queue=dlq_name, exchange=dlx_name, routing_key=dlq_name)
+        self._channel.queue_declare(queue=dlq_name, durable=True)
+        self._channel.queue_bind(
+            queue=dlq_name, exchange=dlx_name, routing_key=dlq_name
+        )
 
     def consume_messages(self, queue_name: str, callback: Callable):
-        self.channel.basic_consume(
+        self._channel.basic_consume(
             queue=queue_name,
             on_message_callback=callback,
             auto_ack=False,
         )
         print(" [*] Waiting for messages. To exit press CTRL+C")
-        self.channel.start_consuming()
+        self._channel.start_consuming()

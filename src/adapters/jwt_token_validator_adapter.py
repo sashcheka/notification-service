@@ -7,7 +7,22 @@ from ports.token_validator_interface import ITokenValidator
 
 
 class JWTTokenValidatorAdapter(ITokenValidator):
-    def validate_reset_password_link_token(self, link: str) -> dict:
+    def validate_message_password_restoration_link(self, message):
+        reset_password_link = message.get("body", "")
+
+        try:
+            payload = self.validate_password_restoration_link_token_and_get_payload(
+                reset_password_link
+            )
+            print("Link validated successfully.")
+            return payload
+        except ValueError as e:
+            print(f"Link validation failed. Error message: {e}")
+            return None
+
+    def validate_password_restoration_link_token_and_get_payload(
+        self, link: str
+    ) -> dict:
         token = link.split("/")[-1]
 
         try:

@@ -3,7 +3,13 @@ from abc import ABC, abstractmethod
 
 class ITokenValidator(ABC):
     @abstractmethod
-    def validate_reset_password_link_token(self, link: str) -> dict:
+    def validate_message_password_restoration_link(self, message: dict):
+        pass
+
+    @abstractmethod
+    def validate_password_restoration_link_token_and_get_payload(
+        self, link: str
+    ) -> dict:
         pass
 
     @abstractmethod

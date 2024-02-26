@@ -19,20 +19,7 @@ class MessageService:
         except json.JSONDecodeError:
             return {}
 
-    def validate_message_password_restoration_link(self, message):
-        reset_password_link = message.get("body", "")
-
-        try:
-            payload = self.token_validator_adapter.validate_reset_password_link_token(
-                reset_password_link
-            )
-            print("Link validated successfully.")
-            return payload
-        except ValueError as e:
-            print(f"Link validation failed. Error message: {e}")
-            return None
-
-    def validate_message_and_parse_to_dict(self, message_data):
+    def validate_message_and_parse_to_dict(self, message_data) -> dict:
         try:
             reset_password_message = ResetPasswordMessageSchema(**message_data)
             print("Message validated successfully.")
@@ -49,7 +36,7 @@ class MessageService:
                     message_data=message_data
                 )
 
-                if not self.validate_message_password_restoration_link(
+                if not self.token_validator_adapter.validate_message_password_restoration_link(
                     message=reset_password_message
                 ):
                     print("Password reset link is invalid or has expired.")
@@ -68,13 +55,13 @@ class MessageService:
             self.handle_failure(ch, method, properties, body)
 
     def handle_failure(self, ch, method, properties, body):
-        failure_count = properties.headers["x-retry-count"] + 1
+        headers = properties.headers or {}
+        failure_count = headers.get("x-retry-count", 0) + 1
         print(
             f"Handling failure, current retry count is: {failure_count - 1}, incrementing to: {failure_count}"
         )
 
         if failure_count < 5:
-            headers = properties.headers or {}
             headers["x-retry-count"] = failure_count
             print(f"Republishing with new retry count: {failure_count}")
             ch.basic_publish(
@@ -83,9 +70,13 @@ class MessageService:
                 body=body,
                 properties=BasicProperties(headers=headers),
             )
+            ch.basic_ack(delivery_tag=method.delivery_tag)
         else:
             print("Sending message to DLQ")
-            ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+            ch.basic_reject(
+                delivery_tag=method.delivery_tag,
+                requeue=False,
+            )
 
     def start_listening(self, queue_name: str, exchange_name: str, routing_key: str):
         self.mq_adapter.initialize_queues(

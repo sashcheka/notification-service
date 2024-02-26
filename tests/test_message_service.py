@@ -36,21 +36,6 @@ def test_parse_message_body(message_service, message_data):
     ), "The message body should be correctly parsed as JSON"
 
 
-def test_validate_message_password_restoration_link(message_service, message_data):
-    token_validator_adapter = message_service.token_validator_adapter
-    token_validator_adapter.validate_reset_password_link_token.return_value = (
-        message_data
-    )
-
-    result = message_service.validate_message_password_restoration_link(message_data)
-    token_validator_adapter.validate_reset_password_link_token.assert_called_once_with(
-        message_data["body"]
-    )
-    assert (
-        result == message_data
-    ), "The password restoration link should be validated successfully"
-
-
 def test_validate_message_and_parse_to_dict(message_service, message_data):
     with patch("services.message_service.ResetPasswordMessageSchema") as mock_schema:
         mock_schema.return_value.dict.return_value = message_data

@@ -42,6 +42,7 @@ class AWSSESSettings(BaseSettings):
 
 
 class JWTSettings(BaseSettings):
+    PRIVATE_KEY_PATH: Path = BASE_DIR / "certs/private_key.pem"
     PUBLIC_KEY_PATH: Path = BASE_DIR / "certs/public_key.pem"
     ALGORITHM: str = os.environ["JWT_ALGORITHM"]
 

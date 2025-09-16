@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  web-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mongodb-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+      localstack-test:
+        condition: service_healthy
+    env_file:
+      - test.env
+    volumes:
+      - ./src:/app/src
+
+  mongodb-test:
+    image: bitnami/mongodb:7.0.5
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data_test:/bitnami/mongodb
+    env_file:
+      - test.env
+    healthcheck:
+      test: ["CMD", "echo", "db.runCommand('ping').ok", "|", "mongo mongo:27017/test", "--quiet"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  rabbitmq-test:
+    image: rabbitmq:3.12.13-management-alpine
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    volumes:
+      - rabbitmq_data_test:/var/lib/rabbitmq
+    env_file:
+      - test.env
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  localstack-test:
+    image: localstack/localstack:3.1
+    ports:
+      - "4567:4566"
+    env_file:
+      - test.env
+    environment:
+      - DEBUG=1
+      - SERVICES=ses
+      - DEFAULT_REGION=${LOCALSTACK_REGION_NAME}
+      - AWS_ACCESS_KEY_ID=${LOCALSTACK_AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${LOCALSTACK_AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - localstack_data_test:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mongodb_data_test:
+  localstack_data_test:
+  rabbitmq_data_test:

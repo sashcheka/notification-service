@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web:
+    networks:
+      - common_network
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  mongodb:
+    image: bitnami/mongodb:7.0.5
+    networks:
+      - common_network
+    volumes:
+      - mongodb_data:/bitnami/mongodb
+    ports:
+      - "27017:27017"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD", "echo", "db.runCommand('ping').ok", "|", "mongo mongo:27017/test", "--quiet" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+networks:
+  common_network:
+    external: true
+
+volumes:
+  mongodb_data:
+  localstack_data:

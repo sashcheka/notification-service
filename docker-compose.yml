@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     networks:
@@ -14,7 +12,8 @@ services:
       - .env
 
   mongodb:
-    image: bitnami/mongodb:7.0.5
+    # Archived image preserves the existing Bitnami replica-set configuration.
+    image: bitnamilegacy/mongodb:7.0.5
     networks:
       - common_network
     volumes:
@@ -24,7 +23,7 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: [ "CMD", "echo", "db.runCommand('ping').ok", "|", "mongo mongo:27017/test", "--quiet" ]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand('ping').ok ? 0 : 1)"]
       interval: 10s
       timeout: 10s
       retries: 5
